@@ -1,0 +1,149 @@
+/**
+ *
+ */
+/**
+ * @author ac3_o
+ *
+ */
+package com.sql.db;
+
+import java.sql.*;
+
+public class SQLCreate {
+
+    private static SQLCreate uniqueInstance = null;
+    
+    public synchronized static SQLCreate instance(){
+        if(uniqueInstance == null){
+            uniqueInstance = new SQLCreate();
+        }
+        return uniqueInstance;
+    }
+
+    private SQLCreate() {
+    }
+
+    //create database name KWIC
+    public synchronized static void createNewDatabase() {
+        //final String DB_URL = "jdbc:sqlite:KWIC.db";
+        final String DB_URL = "jdbc:mysql://localhost:3306/KWIC";
+
+        try {
+            //driver
+           // Class.forName("org.sqlite.JDBC");
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        try (Connection conn = DriverManager.getConnection(DB_URL, "root", "root")) {
+            if (conn != null) {
+                DatabaseMetaData meta = conn.getMetaData();
+                System.out.println("The driver name is " + meta.getDriverName());
+                Statement st = conn.createStatement();
+                st.executeUpdate("CREATE DATABASE KWIC");
+                System.out.println("A new database has been created.");
+                st.close();
+
+            }
+            conn.close();
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public synchronized static Connection connect() {
+        //connects to database this location
+        //String DB_URL = "jdbc:sqlite:C:\\Users\\ac3_o\\Documents\\GitHub\\KWIC_MicroMiner_NB\\KWIC.db";
+        final String DB_URL = "jdbc:mysql://localhost:3306/KWIC?useSSL=false";
+        Connection c = null;
+
+        try {
+            //driver
+            //Class.forName("org.sqlite.JDBC");
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        try {
+            if (c == null) {
+                c = DriverManager.getConnection(DB_URL, "root", "root");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return c;
+    }
+
+    public synchronized static void createTable() {
+        Connection con = connect();
+
+        Statement stmt = null;
+        try {
+            String sql;
+            stmt = con.createStatement();
+//            sql = "CREATE TABLE IF NOT EXISTS KWICdata (\n"
+//                    + " LineNum, \n"
+//                    + " SortedLine text, \n"
+//                    + " InputLine text" + ");";
+            sql = "create table KWICdata ("
+                    + " LineNum INT(64),"
+                    + " SortedLine  VARCHAR(500),"
+                    + " InputLine  VARCHAR(500))";
+            stmt.executeUpdate(sql);
+            con.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized static void removeAllRecords() {
+        Connection con = connect();
+
+        try {
+            String sql;
+            Statement stmt = con.createStatement();
+            sql = "DELETE FROM KWICdata";
+            stmt.execute(sql);
+            con.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized static void insertRecords(int lineNum, String SortedLine, String InputLine) {
+
+        Connection con = connect();
+        String sql = "INSERT INTO KWICdata(LineNum, SortedLine, InputLine) VALUES(?,?,?)";
+
+        try {
+            PreparedStatement pstmt = con.prepareStatement(sql);
+            pstmt.setInt(1, lineNum);
+            pstmt.setString(2, SortedLine);
+            pstmt.setString(3, InputLine);
+
+            pstmt.executeUpdate();
+            // con.close();
+            // pstmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    /**
+     * @param args the command line arguments
+     */
+    public synchronized static void main(String[] args) {
+       // createNewDatabase();
+        createTable();
+
+    }
+
+}
